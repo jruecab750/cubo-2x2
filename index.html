@@ -586,7 +586,7 @@ function updatePointer(now, dt){
       const r = grab.sl.el.getBoundingClientRect(), gain = grab.hand ? GAIN_HAND : 1;
       setSlider(grab.sl, grab.v0 + (cur.x - grab.x0)/r.width*(grab.sl.max-grab.sl.min)*gain);
     }
-    else if (grab.mode === "none"){}
+    else if (grab.mode === "none" || grab.mode === "tap"){}      // sobre un interruptor: nada hasta soltar
     else if (grab.mode === "layer"){
       const tx = cur.x - grab.x0, ty = cur.y - grab.y0;
       if (grab.axis < 0 && Math.hypot(tx, ty) > lockPx()) lockAxis(tx, ty);
@@ -603,7 +603,7 @@ function updatePointer(now, dt){
         grab.disp += (grab.n*HALF - grab.disp) * (1 - Math.exp(-dt/55));   // llega al salto con suavidad
         grab.pivot.quaternion.setFromAxisAngle(AX[grab.axis], grab.disp);
       }
-    } else {
+    } else if (grab.mode === "orbit"){
       const dx = cur.x - grab.x, dy = cur.y - grab.y; grab.x = cur.x; grab.y = cur.y;
       yaw += dx*0.008; pitch = Math.max(-1.2, Math.min(1.2, pitch + dy*0.006));
     }
@@ -729,6 +729,7 @@ function frame(now){
   detectHand(now);
   updatePointer(now, dt);
   stepSnap(now);
+  if (!Number.isFinite(yaw) || !Number.isFinite(pitch)){ yaw = -0.45; pitch = 0.85; lg("orientacion-restablecida"); }
   cubeGroup.rotation.set(pitch, yaw, 0);
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
